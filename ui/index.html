@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>MeshView</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- <link rel="icon" href="logo.png"> -->
+  <!-- <link rel=icon href=gnome.svg > -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  <link href="https://fonts.googleapis.com/css?family=Francois+One|Roboto:500" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="mv.css">
+</head>
+
+<body>
+
+  <nav class="navbar navbar-light mv-navbar">
+    <a class="navbar-brand" href="#">
+      <!-- <img class="brandLogo" src="logo.svg"></img> -->
+      <span class="mv-brand-name">MeshView</span>
+    </a>
+    <span id="nodeCount"></span>
+    <!-- The Modal -->
+    <div class="modal fade" id="mvNodeConfigModal" data-backdrop="static">
+      <div class="modal-dialog">
+        <div class="modal-content">
+
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h6 class="modal-title" id="mvNodeConfigModalTitle"></h6>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <!-- Modal body -->
+          <div class="modal-body">
+            <form onsubmit="nodeConfigSubmit()">
+              <div class="form-group row">
+                <label for="mvInputNodeLabel" class="col-sm-2 col-form-label">Label</label>
+                <div class="col-sm-10">
+                  <input type="text" class="form-control" id="mvInputNodeLabel" placeholder="Name your node" value="John">
+                </div>
+              </div>
+              <hr>
+              <div class="form-group row">
+                <div class="col-sm-10">
+                  <button type="submit" class="btn btn-primary">Save</button>
+                  <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid">
+    <!-- NAV BAR -->
+    <div class="row justify-content-center">
+      <div class="col">
+          <svg></svg>
+          <span class="popuptext" id="node-info"></span>
+      </div>
+    </div>
+
+    <!-- Network Information Box -->
+    <div class="row">
+      <div class="col-sm-12 col-lg-6">
+        <div class="nw-info-dialog">
+          <div style="padding-left: 5px; background-color: #596D79; color: white">
+            Network Information
+          </div>
+          <table class="table-striped">
+            <tr>
+              <td>NETWORK</td>
+              <td>RPL</td>
+            </tr>
+            <tr>
+              <td>INSTANCE ID</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>DODAG ID</td>
+              <td>aaaa::0212:4b00:13e4:3a80</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    <!-- Event Dialog Box -->
+      <div class="col-sm-12 col-lg-6">
+        <div class="event-dialog table-responsive-sm">
+          <div style="padding-left: 5px; background-color: #596D79; color: white">
+            EVENT LOGS
+          </div>
+          <table class="table-striped" id="logTable"></table>
+        </div>
+      </div>
+    </div>
+  </div> <!-- class="container-fluid" -->
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="graph.js"></script>
+</body>
