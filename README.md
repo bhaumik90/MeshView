@@ -7,6 +7,13 @@ MeshView is a web based network vizualiser and interactive tool targeted for tes
 * Node labeling and location
 * Event window displaying changes in network
 
+## User Interface
+![Screenshot 1](docs/img-1.png "Screenshot 1")
+
+![Screenshot 2](docs/img-2.png "Screenshot 2")
+
+![GIF 1](docs/gif-1.gif "GIF 1")
+
 ## Limitations
 * Currently supports only [RPL](https://tools.ietf.org/html/rfc6550) networks
 
