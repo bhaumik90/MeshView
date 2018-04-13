@@ -21,29 +21,28 @@ var height = svg.node().getBoundingClientRect().height;
 svg.style("height", height).on("click", handleSvgClick);
 
 
-var link = svg.append("g").selectAll(".link");
-var node = svg.append("g").selectAll(".node");
-var nodeLabel = svg.append('g').selectAll(".label");
+var linkGroup = svg.append("g").attr("class", "link");
+var nodeGroup = svg.append("g").attr("class", "node");
+var nodeLabelGroup = svg.append('g').attr("class", "label");
+var link, node, nodeLabel;
 
 var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(function(d) { return d.id; }).distance(function(link){
       return Math.max((countSubLinks(link.source))?getRootLinkDist()*2:getRootLinkDist(),COLLIDE_RADIUS*3);
     }).strength(1))
     .force("collision", d3.forceCollide().radius(COLLIDE_RADIUS))
-    .force("center", d3.forceCenter(width / 2, height / 2))
-    .on("tick", ticked);
+    .force("center", d3.forceCenter(width / 2, height / 2));
 /*--------------------------------------------------------------------------------*/
 /*  GRAPH CREATOR   */
-function createGraph(graph) {
-  
-  link = link.data(graph.links);
-  link.exit().remove();
-  link = link.enter().append("line").attr("class", "link").merge(link);
+function createGraph() {
 
-  node = node.data(graph.nodes);
+  link = linkGroup.selectAll("line").data(dataSet.links, function(l) { return l.target.id + l.source.id  });
+  link.exit().remove();
+  link = link.enter().append("line").merge(link);
+
+  node = nodeGroup.selectAll("circle").data(dataSet.nodes, function(d) { return d.id + d.group + d.label });
   node.exit().remove();
   node = node.enter().append("circle")
-      .attr("class", "node")
       .attr("r", 7)
       .attr("fill", function(d) { return color[d.group] })
       .merge(node)
@@ -56,16 +55,16 @@ function createGraph(graph) {
         .on("drag", handleDragged)
         .on("end", handleDragEnded));
 
-  nodeLabel = nodeLabel.data(graph.nodes);
+  nodeLabel = nodeLabelGroup.selectAll("text").data(dataSet.nodes, function(d) { return d.id + d.group + d.label });
   nodeLabel.exit().remove();
-  nodeLabel = nodeLabel.enter().append("text").attr("class", "label")
+  nodeLabel = nodeLabel.enter().append("text")
               .attr('id',function(d) { return 'l'+d.id})
               .text(function(d) {
                 return ('label' in d) ? d.label : d.id.slice(-2);
               }).merge(nodeLabel)
-  
-  simulation.nodes(graph.nodes);
-  simulation.force("link").links(graph.links);
+
+  simulation.nodes(dataSet.nodes).on("tick", ticked);
+  simulation.force("link").links(dataSet.links);
   simulation.alpha(0.2).restart();
 }
 /*--------------------------------------------------------------------------------*/
@@ -165,12 +164,19 @@ function nodeConfigSubmit()
   $('#mvNodeConfigModal').modal('hide');
   selectedNode = null;
 }
+
+function nodeConfigCancel()
+{
+  event.preventDefault();
+  $('#nvNodeConfigModal').modal('hide');
+  selectedNode = null;
+}
 /*--------------------------------------------------------------------------------*/
 /*  SOCKET IO LISTENERS   */
 socket.on('clientConnected', function(_data){
   
   dataSet = JSON.parse(_data);
-  createGraph(dataSet);
+  createGraph();
   updateNodeNumbers();
 });
 
@@ -187,7 +193,7 @@ socket.on('uiAddNode', function(_data) {
       dataSet.links.push(_entry.links[i]);
   }
   console.log("uiAddNode dataSet: ",dataSet);
-  createGraph(dataSet);
+  createGraph();
   updateNodeNumbers();
 });
 
@@ -203,7 +209,7 @@ socket.on('uiRemoveNode', function(_nodeId) {
       dataSet.links.splice(i,1);
   }
   console.log("uiRemoveNode dataSet: ",dataSet);
-  createGraph(dataSet);
+  createGraph();
   updateNodeNumbers();
 });
 
@@ -219,7 +225,7 @@ socket.on('uiNodeParentChanged', function(_node) {
     }
   }
   console.log("uiNodeParentChanged dataSet: ",dataSet);
-  createGraph(dataSet);
+  createGraph();
 });
 
 socket.on('sendNodeInfo', function(_data) {
