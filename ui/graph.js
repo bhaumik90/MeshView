@@ -7,6 +7,8 @@ var rootLinkDist;
 var COLLIDE_RADIUS = 20;
 var clickTimeOut;
 var isDoubleClick = false;
+var fileData = null;
+var fotaNodes = [];
 
 var color = {
   'ROOT': "#ECB840",
@@ -17,6 +19,7 @@ var color = {
 var svg = d3.select("svg");
 var width = svg.node().getBoundingClientRect().width;
 var height = svg.node().getBoundingClientRect().height;
+var arc = d3.arc().innerRadius(5).outerRadius(7).startAngle(0);
 
 svg.style("height", height).on("click", handleSvgClick);
 
@@ -24,7 +27,8 @@ svg.style("height", height).on("click", handleSvgClick);
 var linkGroup = svg.append("g").attr("class", "link");
 var nodeGroup = svg.append("g").attr("class", "node");
 var nodeLabelGroup = svg.append('g').attr("class", "label");
-var link, node, nodeLabel;
+var fotaProgressGroup = svg.append('g').attr("class", "fota");
+var link, node, nodeLabel, fotaProgress;
 
 var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(function(d) { return d.id; }).distance(function(link){
@@ -63,6 +67,13 @@ function createGraph() {
                 return ('label' in d) ? d.label : d.id.slice(-2);
               }).merge(nodeLabel)
 
+  fotaProgress = fotaProgressGroup.selectAll("path").data(fotaNodes);
+  fotaProgress.exit().remove();
+  fotaProgress = fotaProgress.enter().append("path")
+                  .attr("fill", "#4C4E5F")
+                  .attr("id",function(d) { return 'f'+d.id})
+                  .attr("d", arc).merge(fotaProgress);
+
   simulation.nodes(dataSet.nodes).on("tick", ticked);
   simulation.force("link").links(dataSet.links);
   simulation.alpha(0.2).restart();
@@ -83,6 +94,9 @@ function ticked() {
   nodeLabel
   .attr("x", function(d) { return d.x+7; })
   .attr("y", function(d) { return d.y+7/2; });
+
+  fotaProgress
+  .attr('transform', function(d){ return 'translate('+getNode(d.id).x+','+getNode(d.id).y+')'});
 }
 
 function handleDragStarted(d) {
@@ -135,6 +149,7 @@ function handleNodeDblClick(d, i)
   showPopup(false);
   document.getElementById("mvInputNodeLabel").value = d3.select("#l"+d.id).text();
   $('#mvNodeConfigModal').modal('show');
+  document.getElementById('mvOtaImageLabel').innerHTML = "Select OTA image";  
   d3.select('#mvNodeConfigModalTitle').text("Node Configuration: "+d.id);
 }
 
@@ -153,6 +168,21 @@ function showPopup(condition)
   d3.select("#node-info").classed("show", condition);
 }
 
+function readFile(file) 
+{
+  var reader = new FileReader();
+  reader.onload = readSuccess;
+  function readSuccess(evt) {
+    document.getElementById('mvOtaImageLabel').innerHTML = file.name+'\t'+parseFloat(file.size/1024).toFixed(2)+' KB';
+    if(evt.target.readyState==2) fileData = evt.target.result;
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+document.getElementById('mvOtaImage').onchange = function(e) {
+  readFile(e.srcElement.files[0]);
+};
+
 function nodeConfigSubmit()
 {
   event.preventDefault();
@@ -162,6 +192,9 @@ function nodeConfigSubmit()
   getNode(selectedNode.id).label = document.getElementById("mvInputNodeLabel").value;
   socket.emit('labelNode', {id:selectedNode.id,label:document.getElementById("mvInputNodeLabel").value});
   $('#mvNodeConfigModal').modal('hide');
+
+  if(fileData!==null) socket.emit('otaUpload', {nodeId: selectedNode.id, image: fileData});
+
   selectedNode = null;
 }
 
@@ -170,6 +203,7 @@ function nodeConfigCancel()
   event.preventDefault();
   $('#nvNodeConfigModal').modal('hide');
   selectedNode = null;
+  fileData = null;
 }
 /*--------------------------------------------------------------------------------*/
 /*  SOCKET IO LISTENERS   */
@@ -259,6 +293,33 @@ socket.on('uiAddLog', function(_log){
     }
     return res;
   })
+});
+
+socket.on('otaStatus', function(_data) {
+
+  let _entryFound = false;
+  for(let i=0; i<fotaNodes.length; i++)
+  {
+    if(fotaNodes[i].id===_data.id)
+    {
+      if(_data.state==="DOWNLOADING")
+      {
+        fotaNodes[i].endAngle = _data.percent*3.6*(Math.PI/180);
+        d3.select("#f"+fotaNodes[i].id).attr("d", arc);
+        _entryFound = true;
+      }
+      else
+      {
+        fotaNodes.splice(i, 1);
+        createGraph();
+      }
+    }
+  }
+  if(!_entryFound && _data.state==="DOWNLOADING")
+  {
+    fotaNodes.push({id: _data.id, endAngle: _data.percent*3.6*(Math.PI/180)});
+    createGraph();
+  }
 });
 /*--------------------------------------------------------------------------------*/
 /*  GRAPH UTILITY FUNCTIONS   */

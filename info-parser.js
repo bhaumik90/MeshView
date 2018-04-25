@@ -19,7 +19,8 @@ var infoType = {
   6: "DAG VERSION",
   7: "CHANNEL",
   8: "PAN ID",
-  9: "TX POWER"
+  9: "TX POWER",
+  10: "FIRMWARE VERSION"
 };
 Object.freeze(infoType);
 
@@ -164,6 +165,10 @@ module.exports = {
 
         case "TX POWER":
           _nodeInfo[infoType[type]] = val.readInt8(0).toString()+" dBm";
+        break;
+
+        case "FIRMWARE VERSION":
+          _nodeInfo[infoType[type]] = val.readInt8(0).toString()+"."+val.readInt8(1).toString();
         break;
 
         case undefined:
