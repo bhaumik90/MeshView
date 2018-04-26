@@ -9,6 +9,7 @@ var clickTimeOut;
 var isDoubleClick = false;
 var fileData = null;
 var fotaNodes = [];
+var popupCoordinates = [];
 
 var color = {
   'ROOT': "#ECB840",
@@ -23,11 +24,16 @@ var arc = d3.arc().innerRadius(5).outerRadius(7).startAngle(0);
 
 svg.style("height", height).on("click", handleSvgClick);
 
+var zoom_handler = d3.zoom().scaleExtent([0.5, 10]).on("zoom", function(){
+  g.attr('transform', 'translate('+d3.event.transform.x+','+d3.event.transform.y+') scale('+d3.event.transform.k+')');
+});
+svg.call(zoom_handler).on("dblclick.zoom", null);
 
-var linkGroup = svg.append("g").attr("class", "link");
-var nodeGroup = svg.append("g").attr("class", "node");
-var nodeLabelGroup = svg.append('g').attr("class", "label");
-var fotaProgressGroup = svg.append('g').attr("class", "fota");
+var g = svg.append('g');
+var linkGroup = g.append("g").attr("class", "link");
+var nodeGroup = g.append("g").attr("class", "node");
+var nodeLabelGroup = g.append('g').attr("class", "label");
+var fotaProgressGroup = g.append('g').attr("class", "fota");
 var link, node, nodeLabel, fotaProgress;
 
 var simulation = d3.forceSimulation()
@@ -125,6 +131,7 @@ function handleMouseOut(d, i) {
 }
 
 function handleNodeClick(d, i) {
+  popupCoordinates = [d3.event.offsetX, d3.event.offsetY];
   isNodeClicked = true;
   clickTimeOut = setTimeout(function(){
     if(!isDoubleClick)
@@ -277,8 +284,8 @@ socket.on('sendNodeInfo', function(_data) {
         }
         return info;
       })
-      .style("left", (selectedNode.x-popup.node().getBoundingClientRect().width)+"px")
-      .style("top", (selectedNode.y-popup.node().getBoundingClientRect().height/2)+"px")
+      .style("left", (popupCoordinates[0]-popup.node().getBoundingClientRect().width)+"px")
+      .style("top", (popupCoordinates[1]-popup.node().getBoundingClientRect().height/2)+"px")
   showPopup(true);
 })
 
