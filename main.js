@@ -36,6 +36,7 @@ io.on('connection', function(socket) {
   socket.on('labelNode', function(_data){ infoParser.addNodeLabel(_data); });
 
   socket.on('otaUpload', function(_ota){ 
+    if(_ota.nodeId in fotaInstances) return;
     let _node = infoParser.getNodeInfo(_ota.nodeId)
     startFotaUpdateTimer();
     fotaInstances[_ota.nodeId] = new fota(_node['GLOBAL IP'], _ota.image);
