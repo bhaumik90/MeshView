@@ -38,7 +38,6 @@ function constructBlockOption()
 function sendNextBlock()
 {
   let _this = this;
-  console.log("Block Number: "+_this.nextBlockNumber);
   let _data;
   if((this.nextBlockNumber===this.lastBlockNumber) && (this.otaImage.length%this.chunkSize))
   {
@@ -66,7 +65,6 @@ function fota(_ipAddr, _img)
 
 function otaProcessResponse(_this, _response)
 {
-  console.log("Response on "+_response.url.toString()+" "+_response.code);
   if(_response.code.split('.')[0]==='4' || _response.code.split('.')[0]==='5') process.exit(0);
   if(_this.otaState==="DOWNLOADING" && _this.nextBlockNumber<_this.lastBlockNumber && _response.code.split('.')[0]==='2' && _response.code.split('.')[1]==='31')
   {
@@ -84,11 +82,9 @@ function otaProcessResponse(_this, _response)
 
 fota.prototype.handleRequest = function(_request)
 {
-  console.log("fota.prototype.handleRequest");
   var _this = this;
   if(_request.url==="/5/0" && _this.otaState==="INITIATED")
   {
-    console.log("SENDING IMAGE!!!");
     _this.otaState = "DOWNLOADING";
     _this.nextBlockNumber=0;
     sendNextBlock.call(_this);
