@@ -1,6 +1,5 @@
 var socket = io.connect();
 var dataSet = {"nodes":[], "links":[]};
-var isNodeClicked = false;
 var selectedNode = null;
 var eventLogs = [];
 var rootLinkDist;
@@ -132,7 +131,7 @@ function handleMouseOut(d, i) {
 
 function handleNodeClick(d, i) {
   popupCoordinates = [d3.event.offsetX, d3.event.offsetY];
-  isNodeClicked = true;
+  event.stopPropagation();
   clickTimeOut = setTimeout(function(){
     if(!isDoubleClick)
     {
@@ -150,24 +149,18 @@ function handleNodeClick(d, i) {
 function handleNodeDblClick(d, i)
 {
   isDoubleClick = true;
-  isNodeClicked = true;
   clearTimeout(clickTimeOut);
   selectedNode = d;
   showPopup(false);
   document.getElementById("mvInputNodeLabel").value = d3.select("#l"+d.id).text();
   $('#mvNodeConfigModal').modal('show');
-  document.getElementById('mvOtaImageLabel').innerHTML = "Select OTA image";  
+  document.getElementById('mvOtaImage').labels[0].innerText = "Select OTA image";  
   d3.select('#mvNodeConfigModalTitle').text("Node Configuration: "+d.id);
 }
 
 function handleSvgClick() {
-
-  if(!isNodeClicked)
-  {
-    selectedNode = null;
-    showPopup(false);
-  }
-  isNodeClicked = false;
+  selectedNode = null;
+  showPopup(false);
 }
 
 function showPopup(condition)
@@ -180,15 +173,16 @@ function readFile(file)
   var reader = new FileReader();
   reader.onload = readSuccess;
   function readSuccess(evt) {
-    document.getElementById('mvOtaImageLabel').innerHTML = file.name+'\t'+parseFloat(file.size/1024).toFixed(2)+' KB';
     if(evt.target.readyState==2) fileData = evt.target.result;
   };
   reader.readAsArrayBuffer(file);
 }
 
-document.getElementById('mvOtaImage').onchange = function(e) {
-  readFile(e.srcElement.files[0]);
-};
+document.getElementById('mvOtaImage').onchange = function(e) { readFile(e.srcElement.files[0]); };
+
+document.getElementById('mvOtaImage').addEventListener('input', function(e) {
+  this.labels[0].innerText = e.srcElement.files[0].name+' | '+parseFloat(e.srcElement.files[0].size/1024).toFixed(2)+' KB';
+})
 
 function nodeConfigSubmit()
 {
@@ -201,13 +195,15 @@ function nodeConfigSubmit()
   $('#mvNodeConfigModal').modal('hide');
 
   if(fileData!==null) socket.emit('otaUpload', {nodeId: selectedNode.id, image: fileData});
-
+  fileData = null;
+  document.getElementById('mvOtaImage').value = null;
   selectedNode = null;
 }
 
 function nodeConfigCancel()
 {
   event.preventDefault();
+  document.getElementById('mvOtaImage').value = null;
   $('#nvNodeConfigModal').modal('hide');
   selectedNode = null;
   fileData = null;
