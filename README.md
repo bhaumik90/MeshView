@@ -23,6 +23,7 @@ MeshView is a web based network vizualiser and interactive tool targeted for tes
 2. Git clone or download the [MeshView](https://github.com/bhaumik90/MeshView) repository.
 3. Install npm modules `npm install`
 4. Start `npm start`
+5. Open the chrome browser and go to `localhost:8000`
 
 ## MeshView Client
 MeshView Client is the software which runs on individual devices in the network. For further details goto [MeshView-Client](https://github.com/bhaumik90/MeshView-Client)
